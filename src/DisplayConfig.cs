@@ -104,7 +104,7 @@ public static class Vd {
   }
 
   public class DisplayInfo {
-    public int PathIndex; public string GdiName, FriendlyName, Output, Vendor, AdapterPath;
+    public int PathIndex; public string GdiName, FriendlyName, Output, Vendor, AdapterPath, MonitorPath;
     public bool Internal, Primary, SupportsVirtualMode;
     public uint DesktopWidth, DesktopHeight, SignalWidth, SignalHeight; public double RefreshHz;
   }
@@ -138,7 +138,7 @@ public static class Vd {
       list.Add(new DisplayInfo {
         PathIndex = i, GdiName = sn.gdiName, FriendlyName = string.IsNullOrEmpty(tn.friendlyName) ? (internalPanel ? "Built-in display" : "Display") : tn.friendlyName,
         Output = OutputName(p.targetInfo.outputTechnology), Internal = internalPanel, Primary = s.srcX == 0 && s.srcY == 0,
-        AdapterPath = an.adapterDevicePath, Vendor = VendorName(an.adapterDevicePath),
+        AdapterPath = an.adapterDevicePath, MonitorPath = tn.monitorDevicePath, Vendor = VendorName(an.adapterDevicePath),
         SupportsVirtualMode = c.Virtual && (p.flags & PATH_SUPPORT_VIRTUAL_MODE) != 0 && DesktopIdx(c, i) >= 0,
         DesktopWidth = s.srcWidth, DesktopHeight = s.srcHeight, SignalWidth = t.activeCx, SignalHeight = t.activeCy,
         RefreshHz = t.vSyncFreq.Den == 0 ? 0 : (double)t.vSyncFreq.Num / t.vSyncFreq.Den

@@ -10,7 +10,26 @@ Windows can run a display in a *virtual mode*, where the desktop size differs fr
 
 Windows normally uses this to show resolutions *lower* than native. This tool requests *higher* ones through the display-configuration API (`SetDisplayConfig` with `SDC_VIRTUAL_MODE_AWARE`). If you ask for a different aspect ratio, the image is letterboxed rather than stretched.
 
-## Quick start
+## The app
+
+`IntelVirtualDisplay.exe` is a single 240 KB file with nothing to install. It needs .NET Framework 4.8, which every Windows 10/11 already has.
+
+1. Download `IntelVirtualDisplay.exe` from the latest release, or build it yourself (below). Put it somewhere permanent, e.g. `C:\Tools`.
+2. Run it. A window opens showing each display: its desktop size, native signal and scale, plus presets at 4/3×, 5/3×, 2×, 8/3× and 4× native. On a 1080p panel those are 2560×1440, 3200×1800, 3840×2160, 5120×2880 and 7680×4320. You can also enter a custom size.
+3. Pick a size. A **Keep changes?** dialog counts down 15 s. Keep saves it; anything else reverts.
+4. Tick **Start with Windows**. The app then runs in the tray, applies your resolution at sign-in, and with **Keep my resolution when monitors change** re-applies it whenever monitors are plugged in or removed. Windows saves display settings per monitor combination, so without this a new combination falls back to native.
+   - If you change the resolution in Windows Settings instead, the app notices and remembers your choice rather than fighting it.
+5. Closing the window leaves the app in the tray. Left-click the tray icon to reopen it. Right-click it for quick sizes, the two settings, and Exit.
+
+The window is a chromeless Microsoft Edge app window showing a page served by the exe itself on `127.0.0.1`. Every API call needs a random per-run token, and requests with any other `Host` header are refused, so websites can't drive it. Settings and the log are kept in `%LOCALAPPDATA%\intel-virtual-display`. The UI uses the Paper design system; its fonts are bundled under the SIL Open Font License (see `third-party/`).
+
+### Build
+
+```powershell
+.\build.ps1      # -> dist\IntelVirtualDisplay.exe, using the C# compiler built into Windows
+```
+
+## Scripts (no app)
 
 1. Download or clone this repository somewhere permanent, e.g. `C:\Tools\intel-virtual-display`.
 2. Open `resolutions\` and double-click a file:
@@ -87,6 +106,9 @@ Results from other machines are welcome: open an issue with the `List displays.b
 ## Files
 
 ```
+app/                        the exe: tray, keeper, confirm timeout, local UI server (C#, .NET Framework 4.8)
+ui/                         the window (Paper design system), embedded into the exe at build time
+build.ps1                   builds dist/IntelVirtualDisplay.exe
 Set-VirtualResolution.ps1   main script (list / apply / confirm / watchdog)
 Install-Startup.ps1         creates or removes the sign-in shortcut
 src/DisplayConfig.cs        Win32 display-configuration (CCD) interop
