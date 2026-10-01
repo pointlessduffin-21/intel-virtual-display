@@ -1,4 +1,4 @@
-Fonts bundled in ui/fonts (latin subset, from Google Fonts), each under the SIL Open Font License 1.1.
+Fonts bundled in ivd/fonts (static TTFs from google/fonts, rsms/inter and JetBrains/JetBrainsMono), each under the SIL Open Font License 1.1.
 
 ==============================================================================
 Instrument Serif

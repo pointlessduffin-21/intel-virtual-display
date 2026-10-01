@@ -12,7 +12,7 @@ Windows normally uses this to show resolutions *lower* than native. This tool re
 
 ## The app
 
-`IntelVirtualDisplay.exe` is a single 240 KB file with nothing to install. It needs .NET Framework 4.8, which every Windows 10/11 already has.
+`IntelVirtualDisplay.exe` is a single file with nothing to install. It's a native window (Python + Tkinter, packaged with PyInstaller), with no web view or browser engine. Measured on the test laptop: the window appears in about 2 s, memory is about 72 MB, and idle CPU is under 1% of one core.
 
 1. Download `IntelVirtualDisplay.exe` from the latest release, or build it yourself (below). Put it somewhere permanent, e.g. `C:\Tools`.
 2. Run it. A window opens showing each display: its desktop size, native signal and scale, plus presets at 4/3×, 5/3×, 2×, 8/3× and 4× native. On a 1080p panel those are 2560×1440, 3200×1800, 3840×2160, 5120×2880 and 7680×4320. You can also enter a custom size.
@@ -21,12 +21,16 @@ Windows normally uses this to show resolutions *lower* than native. This tool re
    - If you change the resolution in Windows Settings instead, the app notices and remembers your choice rather than fighting it.
 5. Closing the window leaves the app in the tray. Left-click the tray icon to reopen it. Right-click it for quick sizes, the two settings, and Exit.
 
-The window is a chromeless Microsoft Edge app window showing a page served by the exe itself on `127.0.0.1`. Every API call needs a random per-run token, and requests with any other `Host` header are refused, so websites can't drive it. Settings and the log are kept in `%LOCALAPPDATA%\intel-virtual-display`. The UI uses the Paper design system; its fonts are bundled under the SIL Open Font License (see `third-party/`).
+The app is one process. Tk runs on the main thread, the tray icon (pystray) on its own thread, and a 1 s ticker handles the confirmation timeout and the monitor-change keeper. Display changes run on short worker threads, so the window never freezes. Running the exe again just brings up the window of the copy that's already running.
 
-### Build
+Settings and the log are kept in `%LOCALAPPDATA%\intel-virtual-display`. The UI follows the Paper design system. Rounded shapes are antialiased with Pillow, using 9-slice assembly so large cards stay cheap to draw. The fonts are bundled and loaded privately for the app only, under the SIL Open Font License (see `third-party/`).
+
+### Run from source / build
 
 ```powershell
-.\build.ps1      # -> dist\IntelVirtualDisplay.exe, using the C# compiler built into Windows
+python -m pip install -r requirements.txt
+pythonw IntelVirtualDisplay.pyw      # run without building
+.\build.ps1                          # -> dist\IntelVirtualDisplay.exe (PyInstaller, one file)
 ```
 
 ## Scripts (no app)
@@ -106,9 +110,13 @@ Results from other machines are welcome: open an issue with the `List displays.b
 ## Files
 
 ```
-app/                        the exe: tray, keeper, confirm timeout, local UI server (C#, .NET Framework 4.8)
-ui/                         the window (Paper design system), embedded into the exe at build time
-build.ps1                   builds dist/IntelVirtualDisplay.exe
+IntelVirtualDisplay.pyw     app entry point
+ivd/app.py                  window, confirm dialog, tray icon, single instance, Start with Windows
+ivd/core.py                 apply / confirm / revert, per-monitor memory, monitor-change keeper
+ivd/displayconfig.py        Win32 display-configuration (CCD) API via ctypes
+ivd/paper.py                Paper design system for Tkinter (tokens, fonts, widgets)
+ivd/fonts/                  bundled TTFs (OFL)
+build.ps1                   builds dist/IntelVirtualDisplay.exe with PyInstaller
 Set-VirtualResolution.ps1   main script (list / apply / confirm / watchdog)
 Install-Startup.ps1         creates or removes the sign-in shortcut
 src/DisplayConfig.cs        Win32 display-configuration (CCD) interop
